@@ -11,7 +11,8 @@
     "php": "^8.0",
     "illuminate/support": "^10.0|^11.0",
     "illuminate/console": "^10.0|^11.0",
-    "illuminate/http": "^10.0|^11.0"
+    "illuminate/http": "^10.0|^11.0",
+    "symfony/process": "^5.4 || ^6.0 || ^7.0"
   },
   "require-dev": {
     "orchestra/testbench": "^8.0|^9.0",
