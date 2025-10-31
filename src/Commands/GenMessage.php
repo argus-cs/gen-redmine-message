@@ -90,6 +90,8 @@ class GenMessage extends Command
                 }
             });
 
+        } catch(CommandWarningException $exception) {
+            $this->warn($exception->getMessage());
         } catch (\Exception $exception) {
             $this->error($exception->getMessage());
         }
