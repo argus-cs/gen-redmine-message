@@ -1,0 +1,44 @@
+{
+  "name": "argus-cs/redmine-message",
+  "description": "Pacote Laravel para enviar mensagens ao Redmine.",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    { "name": "argus-cs", "email": "augusto_santos55@hotmail.com" }
+  ],
+  "require": {
+    "php": "^8.1",
+    "illuminate/support": "^10.0|^11.0",
+    "illuminate/console": "^10.0|^11.0",
+    "illuminate/http": "^10.0|^11.0"
+  },
+  "require-dev": {
+    "orchestra/testbench": "^8.0|^9.0",
+    "phpunit/phpunit": "^10.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Eqnote\\RedmineMessage\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Eqnote\\RedmineMessage\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Eqnote\\RedmineMessage\\RedmineMessageServiceProvider"
+      ],
+      "aliases": {
+        "RedmineMessage": "Eqnote\\RedmineMessage\\Facades\\RedmineMessage"
+      }
+    }
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
