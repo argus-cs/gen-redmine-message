@@ -2,8 +2,9 @@
 
 namespace ArgusCS\RedmineMessage\Services;
 
-use Illuminate\Support\Facades\Http;
 use Closure;
+use Exception;
+use Illuminate\Support\Facades\Http;
 
 class GeminiClient
 {
