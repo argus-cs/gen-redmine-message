@@ -3,6 +3,7 @@
 namespace ArgusCS\RedmineMessage\Services;
 
 use Illuminate\Support\Facades\Http;
+use Closure;
 
 class GeminiClient
 {
