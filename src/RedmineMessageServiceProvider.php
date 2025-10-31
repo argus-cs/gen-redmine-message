@@ -1,7 +1,8 @@
 <?php
 
-namespace Eqnote\RedmineMessage;
+namespace ArgusCS\RedmineMessage;
 
+use ArgusCS\RedmineMessage\Commands\GenMessage;
 use Illuminate\Support\ServiceProvider;
 use Eqnote\RedmineMessage\Services\RedmineClient;
 use Eqnote\RedmineMessage\Commands\SendRedmineMessage;
@@ -10,24 +11,24 @@ class RedmineMessageServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/redmine-message.php', 'redmine-message');
+        $this->mergeConfigFrom(__DIR__ . '/../config/messages.php', 'messages');
 
-        $this->app->singleton('redmine-message', function ($app) {
-            return new RedmineClient(config('redmine-message'));
-        });
+//        $this->app->singleton('messages', function ($app) {
+//            return new RedmineClient();
+//        });
 
-        $this->app->alias('redmine-message', RedmineClient::class);
+//        $this->app->alias('messages', RedmineClient::class);
     }
 
     public function boot(): void
     {
         $this->publishes([
-            __DIR__ . '/../config/redmine-message.php' => config_path('redmine-message.php'),
-        ], 'redmine-message-config');
+            __DIR__ . '/../config/messages.php' => config_path('messages.php'),
+        ], 'messages-config');
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                SendRedmineMessage::class,
+                GenMessage::class
             ]);
         }
     }
