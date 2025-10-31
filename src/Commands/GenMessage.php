@@ -2,11 +2,12 @@
 
 namespace ArgusCS\RedmineMessage\Commands;
 
-use ArgusCS\RedmineMessage\Services\GeminiClient;
-use ArgusCS\RedmineMessage\Services\GitClient;
-use ArgusCS\RedmineMessage\Services\RedmineClient;
-use Illuminate\Console\Command;
 use File;
+use Illuminate\Console\Command;
+use ArgusCS\RedmineMessage\Services\GitClient;
+use ArgusCS\RedmineMessage\Services\GeminiClient;
+use ArgusCS\RedmineMessage\Services\RedmineClient;
+use ArgusCS\RedmineMessage\Exceptions\CommandWarningException;
 
 class GenMessage extends Command
 {
@@ -22,19 +23,22 @@ class GenMessage extends Command
     protected ?string $prompt;
     protected ?string $journals;
 
-    protected $signature = 'gen:redmine-message';
+    protected $signature = 'gen:redmine-message {diff?}';
 
     protected $description = 'Gera mensagens para o Redmine baseadas no git diff, guideline e na descricao da tarefa.';
 
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->redmineClient = new RedmineClient();
-        $this->gitClient = new GitClient();
-        $this->geminiClient = new GeminiClient();
+    public function __construct(
+        ?RedmineClient $redmineClient = null,
+        ?GitClient $gitClient = null,
+        ?GeminiClient $geminiClient = null
+    ) {
+        $this->redmineClient = $redmineClient ?? new RedmineClient();
+        $this->gitClient = $gitClient ?? new GitClient();
+        $this->geminiClient = $geminiClient ?? new GeminiClient();
 
         $this->guidelinePath = config('messages.redmine.guideline');
+
+        parent::__construct();
     }
 
     public function handle(): void
@@ -55,10 +59,11 @@ class GenMessage extends Command
             }
 
             $this->info('Buscando diff...');
-            $this->diff = $this->gitClient->diff();
+            $diffSulfix = $this->argument('diff') ?? '--staged';
+            $this->diff = $this->gitClient->diff($diffSulfix);
 
             if (empty(trim($this->diff))) {
-                $this->warn("Sem alterações encontradas.");
+                $this->warn("Sem alterações encontradas, certifique-se de ter arquivos staged (git add ...)");
                 return;
             }
 
@@ -105,7 +110,7 @@ class GenMessage extends Command
     protected function setGuideline(): void
     {
         if (!File::exists($this->guidelinePath)) {
-            throw new \Exception("Arquivo de diretrizes de mensagem do Redmine não encontrado em: {$this->guidelinePath}. Gerando sugestões sem restrições.");
+            throw new CommandWarningException("Arquivo de diretrizes de mensagem do Redmine não encontrado em: {$this->guidelinePath}. Gerando sugestões sem restrições.");
         }
 
         $this->guideline = File::get($this->guidelinePath);

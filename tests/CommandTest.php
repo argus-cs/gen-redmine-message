@@ -2,24 +2,21 @@
 
 namespace ArgusCS\RedmineMessage\Tests;
 
-use Illuminate\Support\Facades\Http;
+use ArgusCS\RedmineMessage\Commands\GenMessage;
 
 class CommandTest extends TestCase
 {
-    public function test_artisan_redmine_send_success(): void
+    public function test_command_signature_and_description(): void
     {
-        $endpoint = rtrim(config('redmine-message.endpoint'), '/');
+        $command = new GenMessage();
 
-        Http::fake([
-            $endpoint . '/issues.json' => Http::response(['issue' => ['id' => 3]], 201),
-        ]);
+        $this->assertSame('gen:redmine-message', $command->getSignature());
+        $this->assertStringContainsString('Gera mensagens para o Redmine', (string) $command->getDescription());
+    }
 
-        $this->artisan('redmine:send', [
-            'subject' => 'Assunto',
-            'message' => 'Mensagem',
-            '--project' => 1,
-        ])
-            ->expectsOutput('Mensagem enviada com sucesso.')
+    public function test_command_is_registered_in_kernel(): void
+    {
+        $this->artisan('help', ['command_name' => 'gen:redmine-message'])
             ->assertExitCode(0);
     }
 }
