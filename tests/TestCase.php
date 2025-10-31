@@ -1,10 +1,10 @@
 <?php
 
-namespace Eqnote\RedmineMessage\Tests;
+namespace ArgusCS\RedmineMessage\Tests;
 
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
-use Eqnote\RedmineMessage\RedmineMessageServiceProvider;
-use Eqnote\RedmineMessage\Facades\RedmineMessage;
+use ArgusCS\RedmineMessage\RedmineMessageServiceProvider;
+use ArgusCS\RedmineMessage\Facades\RedmineMessage;
 
 class TestCase extends OrchestraTestCase
 {

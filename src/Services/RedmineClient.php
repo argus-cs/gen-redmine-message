@@ -1,63 +1,57 @@
 <?php
 
-namespace Eqnote\RedmineMessage\Services;
+namespace ArgusCS\RedmineMessage\Services;
 
+use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Arr;
 
 class RedmineClient
 {
-    protected array $config;
+    protected string $baseUrl;
 
-    public function __construct(array $config)
+    public function __construct()
     {
-        $this->config = $config;
+        $this->baseUrl = config('messages.redmine.url');
     }
 
     /**
-     * Envia uma issue/mensagem ao Redmine.
+     * Retrieves a specific task from the Redmine API.
      *
-     * @param string $subject
-     * @param string $message
-     * @param array $context [project => id|identifier]
-     * @return array
+     * @param string $ticket The ticket ID for the task to be retrieved.
+     * @param string|null $key The specific key within the JSON response to extract, or null for the full response.
      */
-    public function send(string $subject, string $message, array $context = []): array
+    public function task(string $ticket, ?string $key = null): mixed
     {
-        if (!Arr::get($this->config, 'enabled', true)) {
-            return ['status' => 'disabled'];
-        }
+        $url = $this->baseUrl . '/issues/' . $ticket . '.json';
 
-        $endpoint = rtrim($this->config['endpoint'] ?? '', '/');
-        $token = $this->config['api_token'] ?? '';
-        $project = $context['project'] ?? $this->config['default_project'];
+        return Http::withHeaders([
+            'X-Redmine-API-Key' => config('messages.redmine.key'),
+            'Content-Type' => 'application/json'
+        ])
+            ->get($url, ['include' => 'journals'])
+            ->json($key);
+    }
 
-        $payload = [
+    /**
+     * Adds a note to an existing task in the Redmine API.
+     *
+     * @param string $ticket The ticket ID of the task to which the note should be added.
+     * @param string $note The note content to be added to the task.
+     * @return PromiseInterface|Response The HTTP response or a promise representing the asynchronous result.
+     */
+    public function addTaskNote(string $ticket, string $note): PromiseInterface|Response
+    {
+        $url = $this->baseUrl . '/issues/'. $ticket .'.json';
+
+        return Http::withHeaders([
+            'X-Redmine-API-Key' => config('messages.redmine.key'),
+            'Content-Type' => 'application/json'
+        ])->put($url, [
             'issue' => [
-                'subject' => $subject,
-                'description' => $message,
-                'project_id' => $project,
-            ],
-        ];
-
-        if (!$endpoint || !$token) {
-            return ['status' => 'error', 'error' => 'Missing endpoint/api_token'];
-        }
-
-        try {
-            $response = Http::withHeaders([
-                'X-Redmine-API-Key' => $token,
-                'Content-Type' => 'application/json',
-            ])->timeout($this->config['timeout'] ?? 10)
-              ->post($endpoint . '/issues.json', $payload);
-
-            return [
-                'status' => $response->successful() ? 'ok' : 'error',
-                'code' => $response->status(),
-                'body' => $response->json(),
-            ];
-        } catch (\Throwable $e) {
-            return ['status' => 'error', 'error' => $e->getMessage()];
-        }
+                'notes' => $note,
+            ]
+        ]);
     }
 }

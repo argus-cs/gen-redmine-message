@@ -1,9 +1,9 @@
 <?php
 
-namespace Eqnote\RedmineMessage\Tests;
+namespace ArgusCS\RedmineMessage\Tests;
 
 use Illuminate\Support\Facades\Http;
-use Eqnote\RedmineMessage\Services\RedmineClient;
+use ArgusCS\RedmineMessage\Services\RedmineClient;
 
 class RedmineClientTest extends TestCase
 {
