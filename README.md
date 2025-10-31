@@ -5,7 +5,7 @@ Pacote Laravel para auxiliar na criação e envio de mensagens para tarefas no R
 ## Recursos
 - Command interativo `gen:redmine-message` que:
   - Busca detalhes da tarefa no Redmine (assunto, descrição e comentários anteriores);
-  - Coleta o `git diff` (por padrão, `--staged`);
+  - Coleta o `git diff` (por padrão, `--staged`; você pode informar um sufixo/range via argumento);
   - Carrega um arquivo de diretrizes (guideline) para formatar a mensagem;
   - Gera o texto via API do Gemini;
   - Opcionalmente envia a mensagem como nota para a tarefa no Redmine.
@@ -80,11 +80,30 @@ REDMINE_GUIDELINE="/caminho/para/guideline.md"  # arquivo com diretrizes para fo
 php artisan gen:redmine-message
 ```
 
+Argumento opcional: `diff`
+- O comando aceita um argumento opcional `diff` para personalizar o sufixo/range passado ao `git diff`.
+- Se omitido, será usado `--staged`.
+
+Exemplos:
+```bash
+# Padrão (usa --staged)
+php artisan gen:redmine-message
+
+# Usando um sufixo alternativo
+php artisan gen:redmine-message "--cached"
+
+# Usando um range específico
+php artisan gen:redmine-message "HEAD~1..HEAD"
+
+# Diff de um arquivo específico
+php artisan gen:redmine-message "README.md"
+```
+
 Fluxo do comando:
 1. Solicita o número do ticket do Redmine;
 2. Busca detalhes da tarefa no Redmine (incluindo journals/comentários);
 3. Mostra os detalhes e pede confirmação para continuar;
-4. Coleta o `git diff --staged`; se estiver vazio, o processo é interrompido;
+4. Coleta o `git diff` usando o sufixo/range informado no argumento (ou `--staged` por padrão); se estiver vazio, o processo é interrompido;
 5. Lê o arquivo de guideline indicado em `REDMINE_GUIDELINE`;
 6. Monta um prompt contendo: diff, guideline, ticket, detalhes da tarefa, comentários anteriores e nome da branch;
 7. Envia o prompt para o Gemini e exibe a mensagem gerada;
