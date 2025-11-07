@@ -31,13 +31,16 @@ class GeminiClient
         $response = Http::withHeaders([
             'x-goog-api-key' => config('messages.gemini.key'),
             'Content-Type' => 'application/json'
-        ])->post($this->baseUrl, [
-            'contents' => [
-                'parts' => [
-                    'text' => $prompt,
+        ])
+            ->timeout(300)
+            ->retry([3, 100])
+            ->post($this->baseUrl, [
+                'contents' => [
+                    'parts' => [
+                        'text' => $prompt,
+                    ],
                 ],
-            ],
-        ]);
+            ]);
 
         if ($response->failed()) {
             throw new Exception('Erro ao conectar com o Gemini: ' . $response->body());

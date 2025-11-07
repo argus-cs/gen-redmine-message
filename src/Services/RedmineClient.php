@@ -30,6 +30,8 @@ class RedmineClient
             'X-Redmine-API-Key' => config('messages.redmine.key'),
             'Content-Type' => 'application/json'
         ])
+            ->timeout(300)
+            ->retry([3, 100])
             ->get($url, ['include' => 'journals'])
             ->json($key);
     }
