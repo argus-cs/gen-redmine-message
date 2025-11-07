@@ -21,6 +21,7 @@ class GenMessage extends Command
     protected ?string $ticket;
     protected ?string $task;
     protected ?string $prompt;
+    protected ?string $message;
     protected ?string $journals;
 
     protected $signature = 'gen:redmine-message {diff?}';
@@ -75,21 +76,54 @@ class GenMessage extends Command
 
             $this->info("Aguardando resposta do Gemini...");
 
-            $this->geminiClient->generate($this->prompt, function ($response) {
+            $finished = false;
+
+            $this->geminiClient->generate($this->prompt, function ($response) use (&$finished) {
                 $this->info('Gerado com sucesso!');
-                $message = $this->getContent($response);
+                $this->message = $this->getContent($response);
 
                 $this->info("Mensagem gerada: \n");
-                $this->line($message);
-
-                $this->newLine();
-
-                if ($this->confirm('Deseja enviar a mensagem para o Redmine?')) {
-                    $this->redmineClient->addTaskNote($this->ticket, $message);
-                    $this->info('Mensagem enviada para o Redmine com sucesso!');
-                }
+                $this->line($this->message);
             });
 
+            $this->newLine();
+
+            while (!$finished) {
+
+                $escolha = $this->choice("O que deseja fazer?", [
+                    "Publicar no Redmine",
+                    "Prompt personalizado",
+                    "Sair"
+                ]);
+
+                if ($escolha === "Publicar no Redmine") {
+                    $this->redmineClient->addTaskNote($this->ticket, $this->message);
+                    $this->info('Mensagem enviada para o Redmine com sucesso!');
+                    $finished = true;
+                }
+
+                if ($escolha === "Prompt personalizado") {
+                    $this->newLine();
+                    $prompt = $this->ask('Digite seu prompt personalizado');
+                    
+                    $this->info("Prompt personalizado: {$prompt}");
+                    $this->line("Aguardando resposta do Gemini...");
+
+                    $this->geminiClient->generate($prompt . " \n\n --- \n\n" . $this->message, function ($response) {
+                        $this->info('Gerado com sucesso!');
+                        $this->message = $this->getContent($response);
+
+                        $this->info("Mensagem gerada: \n");
+                        $this->line($this->message);
+                    });
+                }
+
+                if ($escolha === "Sair") {
+                    $this->info('Operacao cancelada.');
+                    $finished = true;
+                    return;
+                }
+            }
         } catch(CommandWarningException $exception) {
             $this->warn($exception->getMessage());
         } catch (\Exception $exception) {
@@ -104,7 +138,7 @@ class GenMessage extends Command
         $this->task = $task['subject'] ."\n\n". $task['description'];
 
         if (!empty($task['journals'])) {
-            $this->journals = "Comentarios anteriores: \n";
+            $this->journals = "Comentários anteriores: \n";
             $this->journals .= implode("\n", collect($task['journals'])->pluck('notes')->toArray());
         }
     }
